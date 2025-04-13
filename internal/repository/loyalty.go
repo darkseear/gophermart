@@ -258,11 +258,6 @@ func (l *Loyalty) CreateWithdrawal(ctx context.Context, userID int, orderNumber 
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		logger.Log.Error("Failed to commit transaction", zap.Error(err))
-		return err
-	}
-
 	return tx.Commit()
 }
 
