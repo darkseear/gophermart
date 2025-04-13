@@ -7,10 +7,12 @@ import (
 	"github.com/darkseear/go-musthave/internal/service"
 )
 
+type contextKey string
+
+const userIDKey contextKey = "userID"
+
 func AuthMiddleware(a *service.Auth) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		type contextKey string
-		const userIDKey contextKey = "userID"
 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Header.Get("Authorization")
