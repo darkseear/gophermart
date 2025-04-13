@@ -35,7 +35,7 @@ func run() error {
 	db, err := database.InitDB(config.Database)
 	if err != nil {
 		logger.Log.Error("Failed to initialize database")
-		log.Fatal(err)
+		return err
 	}
 	defer db.Close()
 
@@ -43,7 +43,7 @@ func run() error {
 	err = database.RunMigrations(db)
 	if err != nil {
 		logger.Log.Error("Failed to run migrations")
-		log.Fatal(err)
+		return err
 	}
 
 	auth := service.NewAuth(config.SecretKey)
