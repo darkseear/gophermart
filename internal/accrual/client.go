@@ -34,20 +34,20 @@ func (e *RateLimitError) Error() string {
 
 func (c *Client) GetAccrual(orderNumber string) (*models.Accrual, error) {
 	url := fmt.Sprintf("%s/api/orders/%s", c.baseURL, orderNumber)
-	req, err := c.httpClient.Get(url)
+	res, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	defer req.Body.Close()
+	defer res.Body.Close()
 
 	// Чтение тела ответа
-	body, err := io.ReadAll(req.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	// Обработка статусов HTTP
-	switch req.StatusCode {
+	switch res.StatusCode {
 	case http.StatusOK:
 		var accrual models.Accrual
 		if err := json.Unmarshal(body, &accrual); err != nil {
@@ -59,13 +59,13 @@ func (c *Client) GetAccrual(orderNumber string) (*models.Accrual, error) {
 	case http.StatusNotFound:
 		return nil, fmt.Errorf("system url config: %s returned 404", url)
 	case http.StatusTooManyRequests:
-		retryAfter := req.Header.Get("Retry-After")
+		retryAfter := res.Header.Get("Retry-After")
 		duration, parseErr := time.ParseDuration(retryAfter + "s")
 		if parseErr != nil {
 			duration = 0 // Если заголовок отсутствует или некорректен
 		}
 		return nil, &RateLimitError{RetryAfter: duration}
 	default:
-		return nil, fmt.Errorf("unexpected status code %d: %s", req.StatusCode, string(body))
+		return nil, fmt.Errorf("unexpected status code %d: %s", res.StatusCode, string(body))
 	}
 }
