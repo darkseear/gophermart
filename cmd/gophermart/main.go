@@ -54,7 +54,11 @@ func run() error {
 	orderProcessor := processor.NewOrder(accrualClient, store)
 	go orderProcessor.Start(ctx)
 
-	r := handlers.Routers(config, store, auth, orderProcessor)
+	userService := service.NewUser(store)
+	orderService := service.NewOrder(store, orderProcessor)
+	balanceService := service.NewBalance(store)
+
+	r := handlers.Routers(config, store, auth, userService, orderService, balanceService)
 
 	logger.Log.Info("Running server", zap.String("address", config.Address))
 	return http.ListenAndServe(config.Address, r.Router)
