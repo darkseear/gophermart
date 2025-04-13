@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -73,25 +74,23 @@ func (h *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID, err := middleware.GetUserID(r.Header.Get("Authorization"), h.cfg.SecretKey)
+	fmt.Println("User ID:", r.Context().Value("userID"))
 
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	orders, err := h.orderServices.UserGetOrder(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "error", http.StatusInternalServerError)
 		return
 	}
 	if len(orders) == 0 {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	if err := json.NewEncoder(w).Encode(orders); err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

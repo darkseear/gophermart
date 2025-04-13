@@ -34,12 +34,12 @@ func Routers(cfg *config.Config, store *repository.Loyalty, auth *service.Auth, 
 
 	r.Router.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(auth)) //middleware для аутентификации пользователя
-		r.Post("/api/user/orders", orderHandler.UploadOrder)
-		r.Get("/api/user/orders", orderHandler.GetOrders)
+		r.Post("/api/user/orders", middleware.HeaderMiddleware(orderHandler.UploadOrder))
+		r.Get("/api/user/orders", middleware.HeaderMiddleware(orderHandler.GetOrders))
 
-		r.Get("/api/user/balance", balanceHandler.UserGetBalance)
+		r.Get("/api/user/balance", middleware.HeaderMiddleware(balanceHandler.UserGetBalance))
 		r.Post("/api/user/balance/withdraw", balanceHandler.UserWithdrawBalance)
-		r.Get("/api/user/withdrawals", balanceHandler.UserGetWithdrawals)
+		r.Get("/api/user/withdrawals", middleware.HeaderMiddleware(balanceHandler.UserGetWithdrawals))
 	})
 
 	return &r

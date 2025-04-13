@@ -37,7 +37,6 @@ func (b *BalanceHandler) UserGetBalance(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(balance); err != nil {
 		// http.Error(w, "Failed to encode response", http.StatusInternalServerError)
@@ -102,7 +101,6 @@ func (b *BalanceHandler) UserGetWithdrawals(w http.ResponseWriter, r *http.Reque
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	if len(withdrawals) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return
