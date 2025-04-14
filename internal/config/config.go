@@ -6,19 +6,17 @@ import (
 )
 
 type Config struct {
-	Address              string
-	URL                  string
-	LogLevel             string
-	Database             string
-	SecretKey            string
-	AccrualSystemAddress string
+	Address              string `env:"RUN_ADDRESS" envDefault:":8081"`
+	LogLevel             string `env:"LOG_LEVEL" envDefault:"info"`
+	Database             string `env:"DATABASE_URI" envDefault:"host=localhost user=postgres password=1234567890 dbname=loyalty sslmode=disable"`
+	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://localhost:8080"`
+	SecretKey            string `env:"SECRET_KEY" envDefault:"secretkey"`
 }
 
 func New() *Config {
 	var config Config
 
 	flag.StringVar(&config.Address, "a", "localhost:8081", "server url")
-	flag.StringVar(&config.URL, "b", "http://localhost:8081", "last url")
 	flag.StringVar(&config.LogLevel, "l", "info", "log level")
 	flag.StringVar(&config.Database, "d", "host=localhost user=postgres password=1234567890 dbname=loyalty sslmode=disable", "Database")
 	flag.StringVar(&config.SecretKey, "s", "secretkey", "Key for JWT")
@@ -28,9 +26,6 @@ func New() *Config {
 
 	if val, state := os.LookupEnv("RUN_ADDRESS"); state {
 		config.Address = val
-	}
-	if val, state := os.LookupEnv("BASE_URL"); state {
-		config.URL = val
 	}
 	if val, state := os.LookupEnv("LOG_LEVEL"); state {
 		config.LogLevel = val
