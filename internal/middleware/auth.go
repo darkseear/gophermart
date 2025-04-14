@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/darkseear/go-musthave/internal/config"
 	"github.com/darkseear/go-musthave/internal/service"
 )
 
@@ -39,4 +40,12 @@ func GetUserID(token string, secret string) (int, error) {
 		return 0, err
 	}
 	return userID, nil
+}
+
+func GetUserIDFromRequest(r *http.Request, cfg *config.Config) (int, error) {
+	authCode := r.Header.Get("Authorization")
+	if authCode == "" {
+		return 0, service.ErrUnauthorized
+	}
+	return GetUserID(authCode, cfg.SecretKey)
 }

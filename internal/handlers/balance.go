@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/darkseear/go-musthave/internal/config"
+	logger "github.com/darkseear/go-musthave/internal/logging"
 	"github.com/darkseear/go-musthave/internal/middleware"
 	"github.com/darkseear/go-musthave/internal/models"
 	"github.com/darkseear/go-musthave/internal/service"
@@ -21,12 +22,7 @@ func NewBalanceHandler(balanceService *service.Balance, cfg *config.Config) *Bal
 }
 
 func (b *BalanceHandler) UserGetBalance(w http.ResponseWriter, r *http.Request) {
-	authCode := r.Header.Get("Authorization")
-	if authCode == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	userID, err := middleware.GetUserID(r.Header.Get("Authorization"), b.cfg.SecretKey)
+	userID, err := middleware.GetUserIDFromRequest(r, b.cfg)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -34,27 +30,26 @@ func (b *BalanceHandler) UserGetBalance(w http.ResponseWriter, r *http.Request) 
 
 	balance, err := b.balanceService.UserGetBalance(r.Context(), userID)
 	if err != nil {
-		// http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Log.Error("balance error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(balance); err != nil {
-		// http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		logger.Log.Error("faild to decode request body")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// w.Write([]byte(`{"balance": ` + fmt.Sprintf("%f", balance) + `}`))
 }
 func (b *BalanceHandler) UserWithdrawBalance(w http.ResponseWriter, r *http.Request) {
-	authCode := r.Header.Get("Authorization")
-	if authCode == "" {
+	userID, err := middleware.GetUserIDFromRequest(r, b.cfg)
+	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	userID, err := middleware.GetUserID(r.Header.Get("Authorization"), b.cfg.SecretKey)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
+	if r.Body == nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -65,32 +60,24 @@ func (b *BalanceHandler) UserWithdrawBalance(w http.ResponseWriter, r *http.Requ
 	}
 
 	err = b.balanceService.UserWithdrawn(r.Context(), userID, req.Order, req.Sum)
-
 	if err != nil {
-		if errors.Is(err, service.ErrBalanceInvalidOrderNumber) {
+		switch {
+		case errors.Is(err, service.ErrBalanceInvalidOrderNumber):
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			return
-		}
-		if errors.Is(err, service.ErrBalanceInvalidNegativeAmount) {
+		case errors.Is(err, service.ErrBalanceInvalidNegativeAmount):
 			w.WriteHeader(http.StatusPaymentRequired)
-			return
-		}
-		if errors.Is(err, service.ErrBalanceInvalidInsufficientBalance) {
+		case errors.Is(err, service.ErrBalanceInvalidInsufficientBalance):
 			w.WriteHeader(http.StatusPaymentRequired)
-			return
+		default:
+			logger.Log.Error("unexpected error")
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 func (b *BalanceHandler) UserGetWithdrawals(w http.ResponseWriter, r *http.Request) {
-	authCode := r.Header.Get("Authorization")
-	if authCode == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	userID, err := middleware.GetUserID(r.Header.Get("Authorization"), b.cfg.SecretKey)
+	userID, err := middleware.GetUserIDFromRequest(r, b.cfg)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -109,5 +96,4 @@ func (b *BalanceHandler) UserGetWithdrawals(w http.ResponseWriter, r *http.Reque
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 }

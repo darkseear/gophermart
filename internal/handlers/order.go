@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -25,12 +24,7 @@ func NewOrderHandler(orderServices *service.Order, cfg *config.Config) *OrderHan
 }
 
 func (h *OrderHandler) UploadOrder(w http.ResponseWriter, r *http.Request) {
-	authCode := r.Header.Get("Authorization")
-	if authCode == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	userID, err := middleware.GetUserID(r.Header.Get("Authorization"), h.cfg.SecretKey)
+	userID, err := middleware.GetUserIDFromRequest(r, h.cfg)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -69,18 +63,12 @@ func (h *OrderHandler) UploadOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
-	authCode := r.Header.Get("Authorization")
-	if authCode == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	userID, err := middleware.GetUserID(r.Header.Get("Authorization"), h.cfg.SecretKey)
-	fmt.Println("User ID:", r.Context().Value("userID"))
-
+	userID, err := middleware.GetUserIDFromRequest(r, h.cfg)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
 	orders, err := h.orderServices.UserGetOrder(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "error", http.StatusInternalServerError)

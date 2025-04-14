@@ -22,4 +22,8 @@ var (
 	ErrUserInvalidPassword = errors.New("invalid password")
 	ErrUserFailedRegister  = errors.New("failed to register user")
 	//
+
+	//Auth errors
+	ErrUnauthorized = errors.New("unauthorized")
+	//
 )
