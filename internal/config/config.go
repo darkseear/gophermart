@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct {
-	Address              string `env:"RUN_ADDRESS" envDefault:":8081"`
+	Address              string `env:"RUN_ADDRESS" envDefault:"localhost:8081"`
 	LogLevel             string `env:"LOG_LEVEL" envDefault:"info"`
 	Database             string `env:"DATABASE_URI" envDefault:"host=localhost user=postgres password=1234567890 dbname=loyalty sslmode=disable"`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://localhost:8080"`
@@ -16,11 +16,11 @@ type Config struct {
 func New() *Config {
 	var config Config
 
-	flag.StringVar(&config.Address, "a", "localhost:8081", "server url")
-	flag.StringVar(&config.LogLevel, "l", "info", "log level")
-	flag.StringVar(&config.Database, "d", "host=localhost user=postgres password=1234567890 dbname=loyalty sslmode=disable", "Database")
-	flag.StringVar(&config.SecretKey, "s", "secretkey", "Key for JWT")
-	flag.StringVar(&config.AccrualSystemAddress, "r", "http://localhost:8080", "Accrual System Address")
+	flag.StringVar(&config.Address, "a", config.Address, "server url")
+	flag.StringVar(&config.LogLevel, "l", config.LogLevel, "log level")
+	flag.StringVar(&config.Database, "d", config.Database, "Database")
+	flag.StringVar(&config.SecretKey, "s", config.SecretKey, "Key for JWT")
+	flag.StringVar(&config.AccrualSystemAddress, "r", config.AccrualSystemAddress, "Accrual System Address")
 
 	flag.Parse()
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -48,15 +49,15 @@ func (h *OrderHandler) UploadOrder(w http.ResponseWriter, r *http.Request) {
 
 	err = h.orderServices.UserUploadsOrder(r.Context(), models.Order{Number: orderNumber, UserID: userID, Status: models.Registered})
 	if err != nil {
-		if err.Error() == "order already exists" {
+		if errors.Is(err, service.ErrOrderAlreadyExists) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		if err.Error() == "order does not exist to another user" {
+		if errors.Is(err, service.ErrOrderDoesNotExistToAnotherUser) {
 			w.WriteHeader(http.StatusConflict)
 			return
 		}
-		if err.Error() == "invalid order" {
+		if errors.Is(err, service.ErrInvalidOrder) {
 			logger.Log.Error("error upload")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return

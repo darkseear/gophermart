@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/darkseear/go-musthave/internal/config"
@@ -66,15 +67,15 @@ func (b *BalanceHandler) UserWithdrawBalance(w http.ResponseWriter, r *http.Requ
 	err = b.balanceService.UserWithdrawn(r.Context(), userID, req.Order, req.Sum)
 
 	if err != nil {
-		if err.Error() == "invalid order number" {
+		if errors.Is(err, service.ErrBalanceInvalidOrderNumber) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
-		if err.Error() == "negative amount" {
+		if errors.Is(err, service.ErrBalanceInvalidNegativeAmount) {
 			w.WriteHeader(http.StatusPaymentRequired)
 			return
 		}
-		if err.Error() == "insufficient balance" {
+		if errors.Is(err, service.ErrBalanceInvalidInsufficientBalance) {
 			w.WriteHeader(http.StatusPaymentRequired)
 			return
 		}
@@ -97,7 +98,6 @@ func (b *BalanceHandler) UserGetWithdrawals(w http.ResponseWriter, r *http.Reque
 
 	withdrawals, err := b.balanceService.UserGetWithdrawals(r.Context(), userID)
 	if err != nil {
-		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -106,7 +106,6 @@ func (b *BalanceHandler) UserGetWithdrawals(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if err := json.NewEncoder(w).Encode(withdrawals); err != nil {
-		// http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

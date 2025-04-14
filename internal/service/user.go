@@ -22,9 +22,9 @@ func (u *User) UserRegistration(ctx context.Context, login, password string) (*m
 	passwordHash := utils.HashPassword(password)
 	user, err := u.store.GreaterUser(ctx, models.UserInput{Login: login, Password: passwordHash})
 	if err != nil {
-		if err.Error() == "user already exists" {
+		if errors.Is(err, ErrUserAlreadyExists) {
 			logger.Log.Error("User already exists")
-			return nil, errors.New("user already exists")
+			return nil, ErrUserAlreadyExists
 		}
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (u *User) UserLogin(ctx context.Context, login, password string) (*models.U
 		return nil, err
 	}
 	if user.PasswordHash != utils.HashPassword(password) {
-		return nil, errors.New("invalid password")
+		return nil, ErrUserInvalidPassword
 	}
 	return user, nil
 }

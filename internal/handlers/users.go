@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	logger "github.com/darkseear/go-musthave/internal/logging"
@@ -29,11 +30,11 @@ func (uh *UsersHandler) UserRegistration(w http.ResponseWriter, r *http.Request)
 	}
 	user, err := uh.userService.UserRegistration(r.Context(), userInput.Login, userInput.Password)
 	if err != nil {
-		if err.Error() == "user already exists" {
+		if errors.Is(err, service.ErrUserAlreadyExists) {
 			logger.Log.Error("User already exists", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
-		} else if err.Error() == "invalid password" {
+		} else if errors.Is(err, service.ErrUserInvalidPassword) {
 			logger.Log.Error("Invalid password", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
